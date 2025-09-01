@@ -34,6 +34,9 @@
 };
 
 /* Disable unused peripherals to reduce power consumption */
+&uart0 {
+    status = "disabled";
+};
 &adc {
 	status = "disabled";
 };

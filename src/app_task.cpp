@@ -32,8 +32,8 @@
   #error "Only one of CONFIG_USE_VIRTUAL_SENSOR_DATA or CONFIG_USE_REAL_SENSOR_DATA must be defined"
 #endif
 
-// 온습도 업데이트 주기 (10초)
-#define SENSOR_UPDATE_PERIOD_MS 10000
+// 온습도 업데이트 주기 (60초)
+#define SENSOR_UPDATE_PERIOD_MS (60*1000)
 // 온습도 업데이트 스레드
 K_THREAD_STACK_DEFINE(sensor_stack, 2048);
 struct k_thread sensor_thread_data;
@@ -169,7 +169,7 @@ void sensor_thread_func(void *arg1, void *arg2, void *arg3)
 
     while (1) {
         GetSensorData( &temperatureC, &humidityRH);
-        //UpdateTemperatureHumidity(temperatureC, humidityRH);
+        UpdateTemperatureHumidity(temperatureC, humidityRH);
         k_sleep(K_MSEC(SENSOR_UPDATE_PERIOD_MS));
     }
 }
@@ -208,6 +208,12 @@ static bool sensor_device_init( void )
 }
 #endif
 
+void set_thread_tx_power(int8_t power_dbm)
+{
+    otInstance *instance = openthread_get_default_instance();
+    otPlatRadioSetTransmitPower(instance, power_dbm);
+}
+
 CHIP_ERROR AppTask::Init()
 {
 	/* Initialize Matter stack */
@@ -241,6 +247,10 @@ CHIP_ERROR AppTask::Init()
 CHIP_ERROR AppTask::StartApp()
 {
 	ReturnErrorOnFailure(Init());
+
+    k_sleep(K_SECONDS(5));
+    set_thread_tx_power(8);
+
 
 	while (true) {
 		Nrf::DispatchNextTask();
